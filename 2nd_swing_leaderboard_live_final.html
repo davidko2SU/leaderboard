@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="120">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2nd Swing Leaderboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: url('Backgound.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: Gotham, 'Montserrat', sans-serif;
+      color: #fff;
+    }
+    .leaderboard {
+      position: absolute;
+      top: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      background-color: rgba(0, 100, 0, 0.85);
+      padding: 60px 20px 30px 20px;
+      border-radius: 20px;
+      max-width: 1200px;
+      box-shadow: 0 0 20px #000;
+    }
+    .logo {
+      position: absolute;
+      width: 100px;
+      top: 10px;
+    }
+    .logo.left {
+      left: 20px;
+    }
+    .logo.right {
+      right: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5em;
+      color: #ffd700;
+      margin-top: 20px;
+    }
+    .columns {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 40px;
+    }
+    .column {
+      width: 45%;
+    }
+    .entry {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px #000;
+    }
+    .rank {
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #ffeb3b;
+    }
+    .name {
+      font-weight: bold;
+      color: #fff;
+    }
+    .months {
+      font-size: 0.9em;
+      color: #cfd8dc;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="leaderboard">
+    <img src="2ndswing Master logo.jpeg" class="logo left" alt="Logo">
+    <img src="2ndswing Master logo.jpeg" class="logo right" alt="Logo">
+    <h1>2nd Swing Leaderboard</h1>
+    <div class="columns">
+      <div class="column" id="col1"></div>
+      <div class="column" id="col2"></div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchCSV() {
+      const response = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRpixzHGxmPFiVVlGhVem_YCKstWVDJHWgLERcAk_78fIlAYebABZaCqXnUqdJlBPo4Y_s5ikvudAXB/pub?gid=15036246&single=true&output=csv");
+      const text = await response.text();
+      return text;
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split("\n");
+      const headers = lines[0].split(",").map(h => h.trim());
+      const rows = lines.slice(1).map(line => {
+        const values = line.split(",");
+        const entry = {};
+        headers.forEach((h, i) => {
+          entry[h] = values[i];
+        });
+        return entry;
+      });
+      return rows;
+    }
+
+    function renderLeaderboard(data) {
+      data = data.filter(d => d["Name"] && d["Total"]);
+      data.forEach(d => d["Total"] = parseInt(d["Total"]));
+      data.sort((a, b) => b["Total"] - a["Total"]);
+      const top10 = data.slice(0, 10);
+
+      let col1 = "";
+      let col2 = "";
+
+      top10.forEach((d, i) => {
+        const months = Object.keys(d)
+          .filter(k => /(January|February|March|April|May|June|July|August|September|October|November|December)/.test(k))
+          .map(k => `${k.substring(0,3)}: ${d[k] || 0}`).join(" | ");
+        const entry = `
+          <div class="entry">
+            <div class="rank">${i + 1}. <span class="name">${d["Name"]}</span> – ${d["Total"]} reviews</div>
+            <div class="months">${months}</div>
+          </div>`;
+        if (i < 5) col1 += entry;
+        else col2 += entry;
+      });
+
+      document.getElementById("col1").innerHTML = col1;
+      document.getElementById("col2").innerHTML = col2;
+    }
+
+    fetchCSV().then(parseCSV).then(renderLeaderboard);
+  </script>
+</body>
+</html>
